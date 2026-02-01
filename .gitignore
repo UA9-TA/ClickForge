@@ -1,0 +1,9 @@
+# PyInstaller
+/dist/
+/build/
+*.spec
+*.pyc
+__pycache__/
+
+# macOS
+.DS_Store
