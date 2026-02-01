@@ -1,0 +1,6 @@
+Script started on Sun Feb  1 04:31:28 2026
+[1m[7m%[27m[1m[0m                                                                                                                                                                                                          ]7;file://192.168.1.12/Users/ua/NewProject/NewProject[0m[27m[24m[Jua@192 NewProject % [K[?2004h[7mgemini-cli[27m[10D[27mg[27me[27mm[27mi[27mn[27mi[27m-[27mc[27ml[27mi[?2004l
+zsh: command not found: gemini-cli
+[1m[7m%[27m[1m[0m                                                                                                                                                                                                          ]7;file://192.168.1.12/Users/ua/NewProject/NewProject[0m[27m[24m[Jua@192 NewProject % [K[?2004hggemini[?2004l
+zsh: command not found: gemini
+[1m[7m%[27m[1m[0m                                                                                                                                                                                                          ]7;file://192.168.1.12/Users/ua/NewProject/NewProject[0m[27m[24m[Jua@192 NewProject % [K[?2004h

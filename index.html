@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>ClickForge Remote</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --primary-color: #2a2a2a;
+            --secondary-color: #3c3c3c;
+            --accent-color: #007aff;
+            --text-color: #f0f0f0;
+            --success-color: #34c759;
+            --error-color: #ff3b30;
+            --warning-color: #e5a00d;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            max-width: 400px;
+            width: 100%;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 3rem; /* Slightly larger for impact */
+            font-weight: 700;
+            letter-spacing: 2px; /* More spacing for the new font */
+            font-family: 'Bebas Neue', sans-serif; /* Apply the new font */
+            /* New Vibrant Gradient */
+            background: linear-gradient(45deg, #00c6ff, #0072ff, #92fe9d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-fill-color: transparent;
+            /* Subtle Shadow */
+            text-shadow: 0 3px 6px rgba(0, 0, 0, 0.2); /* Slightly stronger shadow */
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 0.3rem 0.7rem;
+            border-radius: 99px;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+        }
+        .status-on { background-color: var(--success-color); color: white; }
+        .status-off { background-color: var(--secondary-color); color: var(--text-color); }
+        .status-testing { background-color: var(--warning-color); color: white; }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(52, 199, 89, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(52, 199, 89, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(52, 199, 89, 0); }
+        }
+        .pulsing {
+            animation: pulse 2s infinite;
+        }
+        
+        #visualizer {
+            height: 10px;
+            border-radius: 5px;
+            margin-bottom: 1.5rem;
+            background-color: var(--secondary-color);
+            transition: background-color 0.1s ease-in-out;
+        }
+
+        .card {
+            background-color: var(--primary-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .card h2 {
+            margin-top: 0;
+            border-bottom: 1px solid var(--secondary-color);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        input[type="number"], select {
+            width: 100%;
+            padding: 0.8rem;
+            background-color: var(--secondary-color);
+            border: 1px solid var(--bg-color);
+            border-radius: 8px;
+            color: var(--text-color);
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        button {
+            padding: 1rem;
+            border-radius: 8px;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+        }
+        button:active {
+            transform: scale(0.96);
+        }
+        .btn-start { background-color: var(--accent-color); color: white; }
+        .btn-stop { background-color: var(--secondary-color); color: var(--text-color); }
+        .btn-test { background-color: var(--warning-color); color: white; grid-column: 1 / -1; }
+        .btn-clear { background-color: var(--error-color); color: white; width: 100%; margin-top: 1rem; }
+
+        #log-display {
+            background-color: var(--bg-color);
+            border-radius: 8px;
+            padding: 1rem;
+            height: 150px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            border: 1px solid var(--secondary-color);
+        }
+        #home-screen-tip {
+            font-size: 0.8rem;
+            text-align: center;
+            color: #888;
+            padding: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>ClickForge</h1>
+        <div id="status-indicator" class="status-badge status-off">Offline</div>
+    </header>
+
+    <div class="card">
+        <h2>Controls</h2>
+        <div class="form-group">
+            <label for="mode-select">Mode</label>
+            <select id="mode-select">
+                <option value="fixed">Fixed Interval</option>
+                <option value="random">Custom Random Interval</option>
+                <option value="simple_random">Simple Random (5-59s)</option>
+            </select>
+        </div>
+        <div class="form-group" id="fixed-interval-group">
+            <label for="interval-input">Interval (seconds)</label>
+            <input type="number" id="interval-input" value="1" min="0.1" step="0.1">
+        </div>
+        <div id="random-interval-group" style="display: none;">
+            <div class="form-group">
+                <label for="min-interval-input">Min Interval (seconds)</label>
+                <input type="number" id="min-interval-input" value="1" min="0.1" step="0.1">
+            </div>
+            <div class="form-group">
+                <label for="max-interval-input">Max Interval (seconds)</label>
+                <input type="number" id="max-interval-input" value="5" min="0.1" step="0.1">
+            </div>
+        </div>
+        <div class="btn-group">
+            <button id="start-btn" class="btn-start">Start</button>
+            <button id="stop-btn" class="btn-stop">Stop</button>
+        </div>
+        <button id="test-btn" class="btn-test">Test Click</button>
+    </div>
+
+    <div class="card">
+        <h2>Log (<span id="log-count">0</span> clicks)</h2>
+        <div id="log-display"></div>
+        <button id="clear-log-btn" class="btn-clear">Clear Log</button>
+    </div>
+
+    <div id="home-screen-tip"></div>
+    <footer style="text-align: center; font-size: 0.75rem; color: #666; margin-top: 2rem;">
+        Created by UA - UnkindAngel
+    </footer>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // --- DOM Elements ---
+    const statusIndicator = document.getElementById('status-indicator');
+    const startBtn = document.getElementById('start-btn');
+    const stopBtn = document.getElementById('stop-btn');
+    const testBtn = document.getElementById('test-btn');
+    const clearLogBtn = document.getElementById('clear-log-btn');
+    const modeSelect = document.getElementById('mode-select');
+    const intervalInput = document.getElementById('interval-input');
+    const minIntervalInput = document.getElementById('min-interval-input');
+    const maxIntervalInput = document.getElementById('max-interval-input');
+    const fixedIntervalGroup = document.getElementById('fixed-interval-group');
+    const randomIntervalGroup = document.getElementById('random-interval-group');
+    const logDisplay = document.getElementById('log-display');
+    const logCount = document.getElementById('log-count');
+    const homeScreenTip = document.getElementById('home-screen-tip');
+
+    let statusInterval;
+    let isClicking = false; // Local state to revert "Testing..." status correctly
+
+    // --- API Functions ---
+    const api = {
+        async start(settings) {
+            await fetch('/api/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(settings)
+            });
+            updateStatus();
+        },
+        async stop() {
+            await fetch('/api/stop', { method: 'POST' });
+            updateStatus();
+        },
+        async testClick() {
+            await fetch('/api/test_click', { method: 'POST' });
+            updateStatus();
+        },
+        async clearLog() {
+            await fetch('/api/log', { method: 'DELETE' });
+            updateStatus();
+        },
+        async getStatus() {
+            const response = await fetch('/api/status');
+            return await response.json();
+        },
+        async getLog() {
+            const response = await fetch('/api/log');
+            return await response.json();
+        }
+    };
+
+    // --- UI Logic ---
+    function updateUI(status, logData) {
+        isClicking = status.is_clicking; // Update local state
+        // Status indicator
+        if (status.is_clicking) {
+            statusIndicator.textContent = 'Clicking';
+            statusIndicator.className = 'status-badge status-on pulsing';
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+        } else {
+            statusIndicator.textContent = 'Stopped';
+            statusIndicator.className = 'status-badge status-off';
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+        }
+        statusIndicator.classList.remove('status-testing'); // Always remove testing class on update
+
+        // Log display
+        logCount.textContent = status.log_count;
+        logDisplay.textContent = logData.log.join('\n');
+        logDisplay.scrollTop = logDisplay.scrollHeight; // Auto-scroll
+    }
+
+    async function updateStatus() {
+        try {
+            const [status, logData] = await Promise.all([api.getStatus(), api.getLog()]);
+            updateUI(status, logData);
+        } catch (error) {
+            console.error("Failed to update status:", error);
+            statusIndicator.textContent = 'Offline';
+            statusIndicator.className = 'status-badge status-off';
+            clearInterval(statusInterval);
+        }
+    }
+
+    modeSelect.addEventListener('change', () => {
+        if (modeSelect.value === 'random') {
+            fixedIntervalGroup.style.display = 'none';
+            randomIntervalGroup.style.display = 'block';
+        } else if (modeSelect.value === 'fixed') {
+            fixedIntervalGroup.style.display = 'block';
+            randomIntervalGroup.style.display = 'none';
+        } else { // simple_random
+            fixedIntervalGroup.style.display = 'none';
+            randomIntervalGroup.style.display = 'none';
+        }
+    });
+
+    startBtn.addEventListener('click', () => {
+        let settings = {};
+        if (modeSelect.value === 'fixed') {
+            settings = {
+                mode: 'fixed',
+                min_interval: parseFloat(intervalInput.value),
+                max_interval: parseFloat(intervalInput.value)
+            };
+        } else if (modeSelect.value === 'random') {
+            settings = {
+                mode: 'random',
+                min_interval: parseFloat(minIntervalInput.value),
+                max_interval: parseFloat(maxIntervalInput.value)
+            };
+        } else { // simple_random
+            settings = {
+                mode: 'random', // Internally, it's still a random mode
+                min_interval: 5,
+                max_interval: 59
+            };
+        }
+        
+        // Basic validation
+        if (settings.min_interval <= 0 || settings.max_interval <= 0) {
+            alert("Intervals must be positive numbers.");
+            return;
+        }
+        if (settings.mode === 'random' && settings.min_interval >= settings.max_interval) {
+            alert("Min interval must be less than max interval.");
+            return;
+        }
+        api.start(settings);
+    });
+
+    testBtn.addEventListener('click', () => {
+        // --- Visual Feedback ---
+        // 1. Set status to "Testing..."
+        statusIndicator.textContent = 'Testing...';
+        statusIndicator.className = 'status-badge status-testing';
+
+        // 2. Flash Test button with a random color
+        const randomHue = Math.floor(Math.random() * 360);
+        testBtn.style.backgroundColor = `hsl(${randomHue}, 90%, 50%)`; // Use HSL for vibrant colors
+
+        setTimeout(() => {
+            // Revert button color
+            testBtn.style.backgroundColor = 'var(--warning-color)';
+        }, 200); // Revert color after a short delay
+
+        // 3. Revert status after a longer delay
+        setTimeout(() => {
+            // Revert to the correct previous state
+            if (isClicking) {
+                statusIndicator.textContent = 'Clicking';
+                statusIndicator.className = 'status-badge status-on pulsing';
+            } else {
+                statusIndicator.textContent = 'Stopped';
+                statusIndicator.className = 'status-badge status-off';
+            }
+        }, 500);
+
+        // --- API Call ---
+        api.testClick();
+    });
+
+    stopBtn.addEventListener('click', api.stop);
+    clearLogBtn.addEventListener('click', api.clearLog);
+
+    function showHomeScreenTip() {
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const isAndroid = /Android/.test(navigator.userAgent);
+
+        if (isIOS) {
+            homeScreenTip.textContent = "Tip: For an app-like experience, tap the Share button and then 'Add to Home Screen'.";
+        } else if (isAndroid) {
+            homeScreenTip.textContent = "Tip: For an app-like experience, tap the menu button and then 'Add to Home Screen'.";
+        } else {
+            homeScreenTip.textContent = "Tip: For an app-like experience on mobile, use 'Add to Home Screen' in your browser's options.";
+        }
+    }
+
+    // --- Initialization ---
+    modeSelect.dispatchEvent(new Event('change')); // Initialize visibility of interval groups
+    updateStatus();
+    statusInterval = setInterval(updateStatus, 2000); // Poll every 2 seconds
+    showHomeScreenTip();
+});
+</script>
+
+</body>
+</html>
